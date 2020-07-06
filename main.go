@@ -62,6 +62,7 @@ var (
 	clientCertFile  string
 	fourOnly        bool
 	sixOnly         bool
+	tlsVersion      string
 
 	// number of redirects followed
 	redirectsFollowed int
@@ -316,6 +317,29 @@ func visit(url *url.URL) {
 	sort.Sort(headers(names))
 	for _, k := range names {
 		printf("%s %s\n", grayscale(14)(k+":"), color.CyanString(strings.Join(resp.Header[k], ",")))
+	}
+
+	if resp.TLS != nil {
+		conn := resp.TLS
+
+		// https://golang.org/pkg/crypto/tls/#pkg-constants
+
+		switch conn.Version {
+		case 0x0301:
+			tlsVersion = "TLS 1.0"
+		case 0x0302:
+			tlsVersion = "TLS 1.1"
+		case 0x0303:
+			tlsVersion = "TLS 1.2"
+		case 0x0304:
+			tlsVersion = "TLS 1.3"
+		}
+
+		printf("%s %s\n", grayscale(14)("TLS version:"), color.GreenString("%s", tlsVersion))
+		// printf("%s %s\n", grayscale(14)("CipherSuite:"), color.GreenString("0x%x  %s", conn.CipherSuite, tls.CipherSuiteName(conn.CipherSuite)))
+		printf("%s %s\n", grayscale(14)("CipherSuite:"), color.GreenString("%s", tls.CipherSuiteName(conn.CipherSuite)))
+		printf("%s %s\n", grayscale(14)("NegotiatedProtocol:"), color.GreenString(conn.NegotiatedProtocol))
+		// printf("%s %s\n", grayscale(14)("ServerName:"), color.GreenString("%s", conn.ServerName))
 	}
 
 	if bodyMsg != "" {
